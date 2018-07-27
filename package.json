@@ -11,8 +11,12 @@
   "author": "anli5005",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/text-to-speech": "^0.3.0",
     "@types/node": "^10.5.3",
+    "@types/serialport": "^6.0.4",
+    "applescript": "^1.0.0",
     "leapjs": "^0.6.4",
+    "play-sound": "^1.1.2",
     "serialport": "^6.2.2"
   },
   "devDependencies": {

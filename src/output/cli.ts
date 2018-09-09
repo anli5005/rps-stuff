@@ -1,4 +1,7 @@
 import { RPSOutput, RPSCountdownState, RPSAction } from '../typings';
+import { CheatStrategyContext } from '../strategy/cheat';
+
+type StrategyData = CheatStrategyContext | any;
 
 export class CLIOutput implements RPSOutput {
   init() {
@@ -21,6 +24,8 @@ export class CLIOutput implements RPSOutput {
     console.log("Thanks for playing!");
   }
 
+  shoot(action: RPSAction) {}
+
   countdown(state: RPSCountdownState) {
     switch (state) {
       case RPSCountdownState.Rock:
@@ -35,11 +40,10 @@ export class CLIOutput implements RPSOutput {
       case RPSCountdownState.Says:
         console.log("Says...");
         break;
+      case RPSCountdownState.Shoot:
+        console.log("Shoot!");
+        break;
     }
-  }
-
-  shoot(action: RPSAction) {
-    console.log("Shoot!");
   }
 
   actionToString(action: RPSAction) {
@@ -55,13 +59,25 @@ export class CLIOutput implements RPSOutput {
     }
   }
 
-  robotWin(robot: RPSAction, human: RPSAction) {
+  robotWin(robot: RPSAction, human: RPSAction, strategyData: StrategyData) {
+    if (strategyData && strategyData.isCheat) {
+      let data = strategyData as CheatStrategyContext;
+      console.log(data.didGuess ? `I predicted you would choose ${this.actionToString(data.guessedAction)}` : `I couldn't guess what you were about to choose.`);
+    }
     console.log(`I chose ${this.actionToString(robot)}. You chose ${this.actionToString(human)}. I win.`);
   }
-  humanWin(robot: RPSAction, human: RPSAction) {
+  humanWin(robot: RPSAction, human: RPSAction, strategyData: StrategyData) {
+    if (strategyData && strategyData.isCheat) {
+      let data = strategyData as CheatStrategyContext;
+      console.log(data.didGuess ? `I thought you would choose ${this.actionToString(data.guessedAction)}` : `I couldn't guess what you were about to choose.`);
+    }
     console.log(`I chose ${this.actionToString(robot)}. You chose ${this.actionToString(human)}. I lost.`);
   }
-  tie(action: RPSAction) {
+  tie(action: RPSAction, strategyData: StrategyData) {
+    if (strategyData && strategyData.isCheat) {
+      let data = strategyData as CheatStrategyContext;
+      console.log(data.didGuess ? `I thought you would choose ${this.actionToString(data.guessedAction)}` : `I couldn't guess what you were about to choose.`);
+    }
     let str = this.actionToString(action);
     console.log(`I chose ${str}. You also chose ${str}. It's a tie.`);
   }

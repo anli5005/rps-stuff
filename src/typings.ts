@@ -33,7 +33,7 @@ export enum RPSOutcome {
 }
 
 export interface RPSTurn {
-  robot: RPSAction;
+  robot: RPSStrategyMove;
   human: RPSAction;
   outcome: RPSOutcome;
 }
@@ -71,9 +71,9 @@ export interface RPSOutput {
   countdown(state: RPSCountdownState): void;
   shoot(action: RPSAction): Promise<void> | void;
 
-  robotWin(robot: RPSAction, human: RPSAction): Promise<void> | void;
-  humanWin(robot: RPSAction, human: RPSAction): Promise<void> | void;
-  tie(action: RPSAction): Promise<void> | void;
+  robotWin(robot: RPSAction, human: RPSAction, strategyData?: any): Promise<void> | void;
+  humanWin(robot: RPSAction, human: RPSAction, strategyData?: any): Promise<void> | void;
+  tie(action: RPSAction, strategyData?: any): Promise<void> | void;
 
   score(robot: number, human: number): Promise<void> | void;
 
@@ -82,8 +82,13 @@ export interface RPSOutput {
   log?(message: string): void;
 }
 
+export interface RPSStrategyMove<T = any> {
+  action: RPSAction;
+  data?: T;
+}
+
 export interface RPSStrategy {
   init(): void;
   cleanup(): void;
-  decideMove(pastTurns: RPSTurn[]): RPSAction;
+  decideMove(pastTurns: RPSTurn[]): RPSStrategyMove | Promise<RPSStrategyMove>;
 }

@@ -21,13 +21,13 @@ export class MacOSVoiceInput extends RPSInput {
         if (this.state === RPSState.Idle) {
           this.emit("start");
         }
-      });
+      }).catch(_e => {});
     } else if (state === RPSState.TryAgain) {
       util.promisify(applescript.execString)(this.confirmScript).then((ret) => {
         if (this.state === RPSState.TryAgain) {
           this.emit("confirmation", ret == "yes");
         }
-      });
+      }).catch(_e => {});
     }
   }
 

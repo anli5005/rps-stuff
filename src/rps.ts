@@ -1,6 +1,7 @@
-import { RPSInput, RPSOutput, RPSState, RPSCountdownState, RPSAction, RPSTurn, RPSOutcome, RPSStrategy } from './typings';
+import { RPSInput, RPSOutput, RPSState, RPSCountdownState, RPSAction, RPSTurn, RPSOutcome, RPSStrategy, RPSStrategyMove } from './typings';
+import { InvalidStrategy } from './strategy/invalid';
 
-function wait(ms: number) {
+export function wait(ms: number) {
   return new Promise((res, rej) => {
     setTimeout(res, ms);
   });
@@ -18,12 +19,14 @@ export class RPSController {
   humanScore: number = null;
   pastTurns: RPSTurn[] = [];
   sayScore = false;
-  strategy: RPSStrategy = null;
+  strategy: RPSStrategy = new InvalidStrategy();
 
   doesSays = false;
 
   idleInterval = 60000;
-  countdownInterval = 1000;
+  countdownInterval = 700;
+  extraCountdownDelay = 225;
+  shootDelay = 300;
   shootTime = 1000;
   playAgainTimeout = 10000;
   moveTimeout = 10000;
@@ -71,10 +74,10 @@ export class RPSController {
     });
   }
 
-  doCountdown() {
+  async doCountdown() {
     this.countdown = RPSCountdownState.Rock;
     let endState = this.doesSays ? RPSCountdownState.Shoot : RPSCountdownState.Says;
-    return new Promise((res, rej) => {
+    await new Promise((res, rej) => {
       let interval: any;
       interval = setInterval(() => {
         if (this.countdown === endState) {
@@ -85,7 +88,9 @@ export class RPSController {
           this.countdown++;
         }
       }, this.countdownInterval);
-    })
+    });
+    await wait(this.extraCountdownDelay);
+    this.outputs.forEach(output => output.countdown(RPSCountdownState.Shoot));
   }
 
   async start() {
@@ -100,13 +105,18 @@ export class RPSController {
       this.humanScore = 0;
       this.robotScore = 0;
       this.pastTurns = [];
-      let interval = setInterval(() => {
-        this.outputs.forEach(output => output.idle());
-      }, this.idleInterval);
+      let interval: NodeJS.Timer;
+      if (this.idleInterval) {
+        interval = setInterval(() => {
+          this.outputs.forEach(output => output.idle());
+        }, this.idleInterval);
+      }
       this.outputs.forEach(output => output.idle());
       await Promise.race(this.inputs.map(input => input.promise("start")));
 
-      clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
       this.setState(RPSState.Starting);
       await Promise.all(this.outputs.map(output => output.gameStart()));
 
@@ -115,36 +125,46 @@ export class RPSController {
         await this.doCountdown();
 
         this.setState(RPSState.Shoot);
-        this.robotAction = this.strategy.decideMove(this.pastTurns);
+        let robotMove: RPSStrategyMove = {action: RPSAction.Invalid};
+        this.robotAction = robotMove.action;
         this.humanAction = null;
-        await this.outputs.map(output => output.shoot(this.robotAction));
-        this.humanAction = await Promise.race(
-          this.inputs.map(input => {
-            return input.getAction();
-          }).filter(p => {
-            return p;
-          }).concat([(async (): Promise<RPSAction> => {
-            await wait(this.moveTimeout);
-            return RPSAction.Invalid;
-          })()])
-        ) as RPSAction;
+        this.humanAction = (await Promise.all([
+          Promise.race(
+            this.inputs.map(input => {
+              return input.getAction();
+            }).filter(p => {
+              return p;
+            }).concat([(async (): Promise<RPSAction> => {
+              await wait(this.moveTimeout);
+              return RPSAction.Invalid;
+            })()])
+          ),
+          (async () => {
+            robotMove = (await Promise.all([
+              this.strategy.decideMove(this.pastTurns),
+              wait(this.shootDelay)
+            ]))[0];
+            await Promise.all(this.outputs.map(output => output.shoot(this.robotAction)));
+          })()
+        ]))[0] as RPSAction;
+        this.robotAction = robotMove.action;
         this.setState(RPSState.Ending);
 
         await wait(this.shootTime);
 
         let outcome = this.decideWinner(this.robotAction, this.humanAction);
-        this.pastTurns.push({robot: this.robotAction, human: this.humanAction, outcome});
+        this.pastTurns.push({robot: robotMove, human: this.humanAction, outcome});
         switch (outcome) {
           case RPSOutcome.RobotWin:
             this.robotScore++;
-            await Promise.all(this.outputs.map(output => output.robotWin(this.robotAction, this.humanAction)));
+            await Promise.all(this.outputs.map(output => output.robotWin(this.robotAction, this.humanAction, robotMove.data)));
             break;
           case RPSOutcome.HumanWin:
             this.humanScore++;
-            await Promise.all(this.outputs.map(output => output.humanWin(this.robotAction, this.humanAction)));
+            await Promise.all(this.outputs.map(output => output.humanWin(this.robotAction, this.humanAction, robotMove.data)));
             break;
           case RPSOutcome.Tie:
-            await Promise.all(this.outputs.map(output => output.tie(this.robotAction)));
+            await Promise.all(this.outputs.map(output => output.tie(this.robotAction, robotMove.data)));
             break;
         }
         if (this.sayScore) {

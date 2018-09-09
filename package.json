@@ -12,11 +12,16 @@
   "license": "ISC",
   "dependencies": {
     "@google-cloud/text-to-speech": "^0.3.0",
+    "@types/body-parser": "^1.17.0",
+    "@types/express": "^4.16.0",
     "@types/node": "^10.5.3",
     "@types/serialport": "^6.0.4",
     "applescript": "^1.0.0",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
     "leapjs": "^0.6.4",
     "play-sound": "^1.1.2",
+    "say": "^0.15.0",
     "serialport": "^6.2.2"
   },
   "devDependencies": {

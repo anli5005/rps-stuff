@@ -26,7 +26,7 @@ app.use(json());
 let server = new Server(app);
 
 rps.addInput(new CLIInput(process.stdin, process.stdout));
-rps.addInput(new MacOSVoiceInput());
+// rps.addInput(new MacOSVoiceInput());
 let rest = new RESTInput(app);
 rest.log = config.rest.log;
 rps.addInput(rest);
@@ -42,6 +42,7 @@ rps.addOutput(new GUIOutput(server));
 GUIInput.strategies.cheat = {shootDelay: 0, strategy: new CheatStrategy(rest)};
 
 rps.sayScore = true;
+rps.idleInterval = 0;
 
 server.listen(config.rest.port);
 rps.start();

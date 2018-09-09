@@ -16,41 +16,42 @@ export class GUIOutput implements RPSOutput {
     this.guiNamespace = this.io.of("/gui");
   };
   cleanup() {
+    console.log("Closing");
     this.io.close();
   };
 
   idle() {
-    this.io.emit("idle");
+    this.guiNamespace.emit("idle");
   };
 
   gameStart() {
-    this.io.emit("start");
+    this.guiNamespace.emit("start");
   };
   gameStop() {
-    this.io.emit("stop");
+    this.guiNamespace.emit("stop");
   };
 
   countdown(state: RPSCountdownState) {
-    this.io.emit("countdown", state);
+    this.guiNamespace.emit("countdown", state);
   }
   shoot(_action: RPSAction) {}
 
   robotWin(robot: RPSAction, human: RPSAction) {
-    this.io.emit("score", {
+    this.guiNamespace.emit("score", {
       robot: {score: this.rps.robotScore, action: robot},
       human: {score: this.rps.humanScore, action: human},
       outcome: RPSOutcome.RobotWin
     });
   }
   humanWin(robot: RPSAction, human: RPSAction) {
-    this.io.emit("score", {
+    this.guiNamespace.emit("score", {
       robot: {score: this.rps.robotScore, action: robot},
       human: {score: this.rps.humanScore, action: human},
       outcome: RPSOutcome.HumanWin
     });
   }
   tie(action: RPSAction) {
-    this.io.emit("score", {
+    this.guiNamespace.emit("score", {
       robot: {score: this.rps.robotScore, action},
       human: {score: this.rps.humanScore, action},
       outcome: RPSOutcome.Tie
@@ -60,6 +61,6 @@ export class GUIOutput implements RPSOutput {
   score(_robot: number, _human: number) {}
 
   tryAgain() {
-    this.io.emit("tryAgain");
+    this.guiNamespace.emit("tryAgain");
   }
 }

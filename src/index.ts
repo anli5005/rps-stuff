@@ -7,7 +7,6 @@ import { RPSController } from './rps';
 
 import { CLIInput } from './input/cli';
 import { MacOSVoiceInput } from './input/macvoice';
-import { LeapMotionInput } from './input/leap';
 import { RESTInput } from './input/rest';
 import { GUIInput } from './input/gui';
 import { CLIOutput } from './output/cli';
@@ -16,7 +15,6 @@ import { ArduinoOutput } from './output/arduino';
 import { GoogleTTSOutput } from './output/gvoice';
 import { SayOutput } from './output/say';
 import { GUIOutput } from './output/gui';
-import { RandomStrategy } from './strategy/random';
 import { CheatStrategy } from './strategy/cheat';
 
 const config = JSON.parse(fs.readFileSync(path.join(__dirname, "../config.json"), "utf8"));
@@ -29,7 +27,6 @@ let server = new Server(app);
 
 rps.addInput(new CLIInput(process.stdin, process.stdout));
 rps.addInput(new MacOSVoiceInput());
-// rps.addInput(new LeapMotionInput());
 let rest = new RESTInput(app);
 rest.log = config.rest.log;
 rps.addInput(rest);
@@ -45,7 +42,6 @@ rps.addOutput(new GUIOutput(server));
 GUIInput.strategies.cheat = {shootDelay: 0, strategy: new CheatStrategy(rest)};
 
 rps.sayScore = true;
-rps.idleInterval = 0;
 
 server.listen(config.rest.port);
 rps.start();

@@ -23,8 +23,12 @@ export class GUIOutput implements RPSOutput {
     this.io.emit("idle");
   };
 
-  gameStart() {};
-  gameStop() {};
+  gameStart() {
+    this.io.emit("start");
+  };
+  gameStop() {
+    this.io.emit("stop");
+  };
 
   countdown(state: RPSCountdownState) {
     this.io.emit("countdown", state);

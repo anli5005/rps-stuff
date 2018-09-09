@@ -1,4 +1,5 @@
 import { RPSOutput, RPSCountdownState, RPSAction } from '../typings';
+import { RPSController } from '../rps';
 import SerialPort from 'serialport';
 import util from 'util';
 
@@ -17,7 +18,8 @@ export class ArduinoOutput implements RPSOutput {
 
   constructor(
     public port: string,
-    public baudRate: number
+    public baudRate: number,
+    private rps: RPSController
   ) {}
 
   send(command: number) {

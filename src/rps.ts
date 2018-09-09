@@ -26,7 +26,7 @@ export class RPSController {
   idleInterval = 60000;
   countdownInterval = 700;
   extraCountdownDelay = 225;
-  shootDelay = 300;
+  shootDelay = 100;
   shootTime = 1000;
   playAgainTimeout = 10000;
   moveTimeout = 10000;
@@ -90,12 +90,12 @@ export class RPSController {
       }, this.countdownInterval);
     });
     await wait(this.extraCountdownDelay);
-    this.outputs.forEach(output => output.countdown(RPSCountdownState.Shoot));
+    await Promise.all(this.outputs.map(output => output.countdown(RPSCountdownState.Shoot)));
   }
 
   async start() {
-    this.inputs.forEach(input => input.init());
-    await Promise.all(this.outputs.map(output => output.init()));
+    this.inputs.forEach(input => input.init(this));
+    await Promise.all(this.outputs.map(output => output.init(this)));
     this.strategy.init();
 
     this.log("Starting game...");
@@ -172,7 +172,7 @@ export class RPSController {
         }
 
         this.setState(RPSState.TryAgain);
-        await Promise.all(this.outputs.map(output => output.tryAgain()));
+        this.outputs.forEach(output => output.tryAgain());
         let tryAgain = await Promise.race([wait(this.playAgainTimeout), Promise.race(this.inputs.map(input => input.promise("confirmation")))]);
         if (!tryAgain) {
           this.setState(RPSState.Stopping);

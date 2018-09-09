@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { RPSController } from './rps';
 
 export enum RPSState {
   Idle,
@@ -11,15 +12,14 @@ export enum RPSState {
 }
 
 export enum RPSCountdownState {
-  Rock,
-  Paper,
-  Scissors,
-  Says,
-  Shoot
+  Rock = 0,
+  Paper = 1,
+  Scissors = 2,
+  Says = 3,
+  Shoot = 4
 }
 
 export enum RPSAction {
-  // Bit 2: Rock, Bit 1: Paper, Bit 0: Scissors
   Rock = 1,
   Paper = 2,
   Scissors = 3,
@@ -27,9 +27,9 @@ export enum RPSAction {
 }
 
 export enum RPSOutcome {
-  RobotWin,
-  HumanWin,
-  Tie
+  RobotWin = 1,
+  HumanWin = 2,
+  Tie = 0
 }
 
 export interface RPSTurn {
@@ -47,7 +47,7 @@ export class PromiseEmitter extends EventEmitter {
 }
 
 export class RPSInput extends PromiseEmitter {
-  init() {}
+  init(rps?: RPSController) {}
   cleanup() {}
 
   state: RPSState;
@@ -60,7 +60,7 @@ export class RPSInput extends PromiseEmitter {
 }
 
 export interface RPSOutput {
-  init(): Promise<void> | void;
+  init(rps?: RPSController): Promise<void> | void;
   cleanup(): Promise<void> | void;
 
   idle(): void;
@@ -68,7 +68,7 @@ export interface RPSOutput {
   gameStart(): Promise<void> | void;
   gameStop(): Promise<void> | void;
 
-  countdown(state: RPSCountdownState): void;
+  countdown(state: RPSCountdownState): Promise<void> | void;
   shoot(action: RPSAction): Promise<void> | void;
 
   robotWin(robot: RPSAction, human: RPSAction, strategyData?: any): Promise<void> | void;

@@ -2,6 +2,7 @@ import { RPSStrategy, RPSStrategyMove, RPSAction, RPSTurn } from '../typings';
 import { wait } from '../rps';
 import { RESTInput } from '../input/rest';
 import { RandomStrategy } from './random';
+import { EventEmitter } from 'events';
 
 export interface CheatStrategyContext {
   isCheat: true;
@@ -9,10 +10,12 @@ export interface CheatStrategyContext {
   guessedAction?: RPSAction;
 }
 
-export class CheatStrategy implements RPSStrategy {
-  constructor(public server: RESTInput) {}
+export class CheatStrategy extends EventEmitter implements RPSStrategy {
+  constructor(public server: RESTInput) {
+    super();
+  }
   fallback = new RandomStrategy();
-  timeout = 300;
+  timeout = 100;
   init() {
     this.fallback.init();
   }

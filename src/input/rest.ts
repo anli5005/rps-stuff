@@ -1,9 +1,7 @@
 import { RPSInput, RPSState, RPSAction } from '../typings';
-import express from 'express';
-import { json } from 'body-parser';
+import { Express } from 'express';
 
 export class RESTInput extends RPSInput {
-  app: express.Express;
   isTakingInput = false;
   private rock: number[] = [];
   private paper: number[] = [];
@@ -11,18 +9,16 @@ export class RESTInput extends RPSInput {
   private numInputs = 0;
   // private invalidCount = 0;
   threshold = 0.95;
-  roll = 3;
+  roll = 10;
   maxTime = 500;
   maxTimeout: NodeJS.Timer = null;
   log = false;
 
-  constructor(public port: number) {
+  constructor(public app: Express) {
     super();
   }
 
   init() {
-    this.app = express();
-    this.app.use(json());
     this.app.get("/ready", (_req, res) => {
       return res.status(200).json({ok: true, ready: this.isTakingInput});
     });
@@ -53,7 +49,6 @@ export class RESTInput extends RPSInput {
         return res.status(400).json({ok: false, error: "not_ready"});
       }
     });
-    this.app.listen(this.port);
   }
 
   getAverage(array: number[]) {

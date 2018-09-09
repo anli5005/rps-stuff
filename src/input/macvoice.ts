@@ -5,15 +5,17 @@ import util from 'util';
 export class MacOSVoiceInput extends RPSInput {
   startScript = `
   tell application "SpeechRecognitionServer"
-  	listen for "start"
+  	listen for {"start", "yes", "sure"}
   end tell
   `;
 
   confirmScript = `
   tell application "SpeechRecognitionServer"
-    return listen for {"yes", "no"}
+    return listen for {"yes", "sure", "of course", "no", "not right now", "not now"}
   end tell
   `
+
+  yes: Record<string, true> = {yes: true, sure: true, "of course": true};
 
   onChangeState(state: RPSState) {
     if (state === RPSState.Idle) {
@@ -21,13 +23,13 @@ export class MacOSVoiceInput extends RPSInput {
         if (this.state === RPSState.Idle) {
           this.emit("start");
         }
-      }).catch(_e => {});
+      }).catch(console.log);
     } else if (state === RPSState.TryAgain) {
       util.promisify(applescript.execString)(this.confirmScript).then((ret) => {
         if (this.state === RPSState.TryAgain) {
-          this.emit("confirmation", ret == "yes");
+          this.emit("confirmation", this.yes[ret]);
         }
-      }).catch(_e => {});
+      }).catch(console.log);
     }
   }
 

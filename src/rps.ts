@@ -17,6 +17,7 @@ export class RPSController {
 
   robotScore: number = null;
   humanScore: number = null;
+  turnLimit: number = null;
   pastTurns: RPSTurn[] = [];
   sayScore = false;
   strategy: RPSStrategy = new InvalidStrategy();
@@ -171,9 +172,13 @@ export class RPSController {
           await Promise.all(this.outputs.map(output => output.score(this.robotScore, this.humanScore)));
         }
 
-        this.setState(RPSState.TryAgain);
-        this.outputs.forEach(output => output.tryAgain());
-        let tryAgain = await Promise.race([wait(this.playAgainTimeout), Promise.race(this.inputs.map(input => input.promise("confirmation")))]);
+        let tryAgain = false;
+        if (!this.turnLimit || this.pastTurns.length < this.turnLimit) {
+          this.setState(RPSState.TryAgain);
+          this.outputs.forEach(output => output.tryAgain());
+          tryAgain = await Promise.race([wait(this.playAgainTimeout), Promise.race(this.inputs.map(input => input.promise("confirmation")))]);
+        }
+
         if (!tryAgain) {
           this.setState(RPSState.Stopping);
           await Promise.all(this.outputs.map(output => output.gameStop()));

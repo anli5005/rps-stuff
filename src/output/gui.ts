@@ -36,25 +36,28 @@ export class GUIOutput implements RPSOutput {
   }
   shoot(_action: RPSAction) {}
 
-  robotWin(robot: RPSAction, human: RPSAction) {
+  robotWin(robot: RPSAction, human: RPSAction, context: any) {
     this.guiNamespace.emit("score", {
       robot: {score: this.rps.robotScore, action: robot},
       human: {score: this.rps.humanScore, action: human},
-      outcome: RPSOutcome.RobotWin
+      outcome: RPSOutcome.RobotWin,
+      context
     });
   }
-  humanWin(robot: RPSAction, human: RPSAction) {
+  humanWin(robot: RPSAction, human: RPSAction, context: any) {
     this.guiNamespace.emit("score", {
       robot: {score: this.rps.robotScore, action: robot},
       human: {score: this.rps.humanScore, action: human},
-      outcome: RPSOutcome.HumanWin
+      outcome: RPSOutcome.HumanWin,
+      context
     });
   }
-  tie(action: RPSAction) {
+  tie(action: RPSAction, context: any) {
     this.guiNamespace.emit("score", {
       robot: {score: this.rps.robotScore, action},
       human: {score: this.rps.humanScore, action},
-      outcome: RPSOutcome.Tie
+      outcome: RPSOutcome.Tie,
+      context
     });
   }
 

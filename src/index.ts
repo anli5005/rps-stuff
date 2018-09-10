@@ -43,6 +43,7 @@ GUIInput.strategies.cheat = {shootDelay: 0, strategy: new CheatStrategy(rest)};
 
 rps.sayScore = true;
 rps.idleInterval = 0;
+rps.turnLimit = 3;
 
 server.listen(config.rest.port);
 rps.start();

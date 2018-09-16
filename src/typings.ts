@@ -41,7 +41,11 @@ export interface RPSTurn {
 export class PromiseEmitter extends EventEmitter {
   promise(event: string): Promise<any> {
     return new Promise((res, rej) => {
-      this.once(event, res);
+      let callback = (e: any) => {
+        this.removeListener(event, callback);
+        res(e);
+      };
+      this.on(event, callback);
     });
   }
 }

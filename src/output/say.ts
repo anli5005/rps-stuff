@@ -79,7 +79,7 @@ export class SayOutput implements RPSOutput {
     if (robot > human) {
       statement = isFinalTurn ? "I won." : "I'm winning.";
     } else if (robot < human) {
-      statement = isFinalTurn ? "I lost." : "You're winning.";
+      statement = isFinalTurn ? "You win." : "You're winning.";
     }
     return this.speakText(`SCORE: ${robot}-${human}. ${statement}`);
   }

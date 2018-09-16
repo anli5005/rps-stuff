@@ -10,6 +10,7 @@ import { MacOSVoiceInput } from './input/macvoice';
 import { RESTInput } from './input/rest';
 import { GUIInput } from './input/gui';
 import { LeapMotionInput } from './input/leap';
+import { RandomInput } from './input/random';
 import { CLIOutput } from './output/cli';
 import { LogOutput } from './output/log';
 import { ArduinoOutput } from './output/arduino';
@@ -25,13 +26,14 @@ interface RPSInputConfig {
   gui?: boolean;
   macvoice?: boolean;
   leap?: boolean;
+  random?: boolean;
 }
 
 interface RPSOutputConfig {
   arduino?: {port: string, baudRate: number} | false;
   cli?: boolean;
   gui?: boolean;
-  gvoice?: string | false;
+  gvoice?: {voice: string, cache: string} | false;
   say?: boolean;
   shoothttp?: ShootHTTPOutputURLs | false;
 }
@@ -67,6 +69,10 @@ if (config.inputs.leap) {
   rps.addInput(new LeapMotionInput());
 }
 
+if (config.inputs.random) {
+  rps.addInput(new RandomInput());
+}
+
 if (config.outputs.cli) {
   rps.addOutput(new CLIOutput());
 }
@@ -76,7 +82,7 @@ if (config.outputs.arduino) {
 }
 
 if (config.outputs.gvoice) {
-  rps.addOutput(new GoogleTTSOutput(config.outputs.gvoice));
+  rps.addOutput(new GoogleTTSOutput(config.outputs.gvoice.voice, config.outputs.gvoice.cache));
 }
 
 if (config.outputs.say) {

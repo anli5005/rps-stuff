@@ -13,7 +13,11 @@ export class GoogleTTSOutput implements RPSOutput {
   client: TextToSpeechClient;
   player: any = null;
 
-  constructor(public voiceName: string) {}
+  constructor(public voiceName: string, public cacheDir: string) {}
+
+  async saveCache() {
+    await fs.promises.writeFile(path.join(this.speechDir, "cache.json"), JSON.stringify(this.speechCache, null, 2));
+  }
 
   async speakText(text: string) {
     if (!this.speechCache[text]) {
@@ -25,14 +29,27 @@ export class GoogleTTSOutput implements RPSOutput {
       let filename = (await util.promisify(crypto.randomBytes)(6)).toString("base64").replace("/", "-") + ".mp3";
       await fs.promises.writeFile(path.join(this.speechDir, filename), result[0].audioContent, "binary");
       this.speechCache[text] = filename;
+      await this.saveCache();
     }
 
     await util.promisify(this.player.play).call(this.player, path.join(this.speechDir, this.speechCache[text]), {});
   }
 
   async init() {
-    this.speechDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "rps-thing-google-tts"));
+    this.speechDir = path.join(this.cacheDir, this.voiceName);
     this.speechCache = {};
+    try {
+      await fs.promises.access(this.speechDir);
+      try {
+        this.speechCache = JSON.parse(await fs.promises.readFile(path.join(this.speechDir, "cache.json"), {encoding: "utf8"}));
+      } catch (e) {
+        await this.saveCache();
+      }
+    } catch (e) {
+      await fs.promises.mkdir(this.speechDir);
+      await this.saveCache();
+    }
+
     this.client = new TextToSpeechClient();
     this.player = player({player: "mplayer"});
   }
@@ -72,7 +89,7 @@ export class GoogleTTSOutput implements RPSOutput {
   }
 
   shoot(action: RPSAction) {
-    return this.speakText("Shoot!");
+    return this.speakText("Shoot.");
   }
 
   actionToString(action: RPSAction) {

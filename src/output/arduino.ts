@@ -29,7 +29,7 @@ export class ArduinoOutput implements RPSOutput {
 
   async init() {
     this.serial = new SerialPort(this.port, {baudRate: this.baudRate});
-    await delay(1000);
+    await delay(2000);
     this.send(RPSAction.Paper);
   }
 
@@ -54,13 +54,17 @@ export class ArduinoOutput implements RPSOutput {
   gameStart() {
     this.send(RPSAction.Rock);
   }
-  tryAgain() {
+  tryAgain() {}
+
+  robotWin(robot: RPSAction, human: RPSAction) {
     this.send(RPSAction.Rock);
   }
-
-  robotWin(robot: RPSAction, human: RPSAction) {}
-  humanWin(robot: RPSAction, human: RPSAction) {}
-  tie(action: RPSAction) {}
+  humanWin(robot: RPSAction, human: RPSAction) {
+    this.send(RPSAction.Rock);
+  }
+  tie(action: RPSAction) {
+    this.send(RPSAction.Rock);
+  }
   score(robot: number, human: number) {}
 
   gameStop() {

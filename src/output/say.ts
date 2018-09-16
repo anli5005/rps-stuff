@@ -1,4 +1,5 @@
 import { RPSOutput, RPSCountdownState, RPSAction } from '../typings';
+import { RPSController } from '../rps';
 import say from 'say';
 import util from 'util';
 
@@ -13,7 +14,10 @@ export class SayOutput implements RPSOutput {
     });
   }
 
-  init() {}
+  private rps: RPSController;
+  init(rps: RPSController) {
+    this.rps = rps;
+  }
   cleanup() {}
 
   idle() {
@@ -71,10 +75,11 @@ export class SayOutput implements RPSOutput {
 
   score(robot: number, human: number) {
     let statement = "It's a tie.";
+    let isFinalTurn = this.rps.turnLimit && this.rps.pastTurns.length >= this.rps.turnLimit;
     if (robot > human) {
-      statement = "I'm winning.";
+      statement = isFinalTurn ? "I won." : "I'm winning.";
     } else if (robot < human) {
-      statement = "You're winning";
+      statement = isFinalTurn ? "I lost." : "You're winning.";
     }
     return this.speakText(`SCORE: ${robot}-${human}. ${statement}`);
   }

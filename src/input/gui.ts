@@ -7,7 +7,7 @@ import { RandomStrategy } from '../strategy/random';
 export class GUIInput extends RPSInput {
   static strategies: Record<string, {shootDelay: number, strategy: RPSStrategy}> = {
     invalid: {strategy: new InvalidStrategy(), shootDelay: 200},
-    random: {strategy: new RandomStrategy(), shootDelay: 200}
+    random: {strategy: new RandomStrategy(), shootDelay: 0}
   };
 
   constructor(public app: Express) {
@@ -29,7 +29,7 @@ export class GUIInput extends RPSInput {
           res.status(200).json({ok: true});
         }
       } else {
-        res.status(400).json({ok: false, error: "not_found"});
+        res.status(400).json({ok: false, error: "not_ready"});
       }
     });
 
@@ -41,6 +41,15 @@ export class GUIInput extends RPSInput {
     this.app.post("/says", (req, res) => {
       rps.doesSays = !!req.body.doesSays;
       res.status(200).json({ok: true});
+    });
+
+    this.app.post("/stop", (_, res) => {
+      if (this.state !== RPSState.Idle) {
+        rps.stopCurrentGame();
+        res.status(200).json({ok: true});
+      } else {
+        res.status(400).json({ok: false, error: "not_ready"});
+      }
     });
   }
 }

@@ -9,7 +9,7 @@ import util from 'util';
 
 export class GoogleTTSOutput implements RPSOutput {
   speechDir: string;
-  speechCache: {[index: string]: string};
+  speechCache: Record<string, string>;
   client: TextToSpeechClient;
   player: any = null;
 

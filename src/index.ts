@@ -9,41 +9,112 @@ import { CLIInput } from './input/cli';
 import { MacOSVoiceInput } from './input/macvoice';
 import { RESTInput } from './input/rest';
 import { GUIInput } from './input/gui';
+import { LeapMotionInput } from './input/leap';
 import { CLIOutput } from './output/cli';
 import { LogOutput } from './output/log';
 import { ArduinoOutput } from './output/arduino';
 import { GoogleTTSOutput } from './output/gvoice';
 import { SayOutput } from './output/say';
 import { GUIOutput } from './output/gui';
+import { ShootHTTPOutput, ShootHTTPOutputURLs } from './output/shoothttp';
 import { CheatStrategy } from './strategy/cheat';
 
-const config = JSON.parse(fs.readFileSync(path.join(__dirname, "../config.json"), "utf8"));
+interface RPSInputConfig {
+  cli?: boolean;
+  rest?: {log: boolean} | false;
+  gui?: boolean;
+  macvoice?: boolean;
+  leap?: boolean;
+}
+
+interface RPSOutputConfig {
+  arduino?: {port: string, baudRate: number} | false;
+  cli?: boolean;
+  gui?: boolean;
+  gvoice?: string | false;
+  say?: boolean;
+  shoothttp?: ShootHTTPOutputURLs | false;
+}
+
+interface RPSRESTConfig {
+  port: number;
+}
+
+interface RPSConfig {
+  inputs: RPSInputConfig;
+  outputs: RPSOutputConfig;
+  rest?: RPSRESTConfig | false;
+  sayScore: boolean;
+  idleInterval: number;
+  turnLimit: number;
+  askToTryAgain: boolean;
+  quitAfterFirstInvalid: boolean;
+}
+
+const config: RPSConfig = JSON.parse(fs.readFileSync(path.join(__dirname, "../config.json"), "utf8"));
 let rps = new RPSController();
-
-let app = express();
-app.use(json());
-
-let server = new Server(app);
-
-rps.addInput(new CLIInput(process.stdin, process.stdout));
-// rps.addInput(new MacOSVoiceInput());
-let rest = new RESTInput(app);
-rest.log = config.rest.log;
-rps.addInput(rest);
-rps.addInput(new GUIInput(app));
-
-rps.addOutput(new CLIOutput());
-// rps.addOutput(new GoogleTTSOutput("en-US-Wavenet-D"));
 rps.addOutput(new LogOutput());
-// rps.addOutput(new ArduinoOutput(config.serial.port, config.serial.baudRate));
-rps.addOutput(new SayOutput());
-rps.addOutput(new GUIOutput(server));
 
-GUIInput.strategies.cheat = {shootDelay: 0, strategy: new CheatStrategy(rest)};
+if (config.inputs.cli) {
+  rps.addInput(new CLIInput(process.stdin, process.stdout));
+}
 
-rps.sayScore = true;
-rps.idleInterval = 0;
-rps.turnLimit = 3;
+if (config.inputs.macvoice) {
+  rps.addInput(new MacOSVoiceInput());
+}
 
-server.listen(config.rest.port);
+if (config.inputs.leap) {
+  rps.addInput(new LeapMotionInput());
+}
+
+if (config.outputs.cli) {
+  rps.addOutput(new CLIOutput());
+}
+
+if (config.outputs.arduino) {
+  rps.addOutput(new ArduinoOutput(config.outputs.arduino.port, config.outputs.arduino.baudRate));
+}
+
+if (config.outputs.gvoice) {
+  rps.addOutput(new GoogleTTSOutput(config.outputs.gvoice));
+}
+
+if (config.outputs.say) {
+  rps.addOutput(new SayOutput());
+}
+
+if (config.outputs.shoothttp) {
+  rps.addOutput(new ShootHTTPOutput(config.outputs.shoothttp));
+}
+
+if (config.rest) {
+  let app = express();
+  app.use(json());
+
+  let server = new Server(app);
+
+  if (config.inputs.gui) {
+    rps.addInput(new GUIInput(app));
+  }
+
+  if (config.outputs.gui) {
+    rps.addOutput(new GUIOutput(server));
+  }
+
+  if (config.inputs.rest) {
+    let rest = new RESTInput(app);
+    rest.log = config.inputs.rest.log;
+    rps.addInput(rest);
+    GUIInput.strategies.cheat = {shootDelay: 0, strategy: new CheatStrategy(rest)};
+  }
+
+  server.listen(config.rest.port);
+}
+
+rps.sayScore = config.sayScore;
+rps.idleInterval = config.idleInterval;
+rps.turnLimit = config.turnLimit;
+rps.askToTryAgain = config.askToTryAgain;
+rps.quitAfterFirstInvalid = config.quitAfterFirstInvalid;
+
 rps.start();

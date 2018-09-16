@@ -27,12 +27,17 @@ export class RPSController {
   idleInterval = 60000;
   countdownInterval = 700;
   extraCountdownDelay = 225;
+  postCountdownDelay = 300;
   shootDelay = 100;
   shootTime = 1000;
   playAgainTimeout = 10000;
   moveTimeout = 10000;
 
+  askToTryAgain = true;
+  quitAfterFirstInvalid = false;
+
   private stopping = false;
+  private stoppingCurrent = false;
 
   decideWinner(robot: RPSAction, human: RPSAction): RPSOutcome {
     if (robot === human) {
@@ -78,7 +83,7 @@ export class RPSController {
   async doCountdown() {
     this.countdown = RPSCountdownState.Rock;
     let endState = this.doesSays ? RPSCountdownState.Shoot : RPSCountdownState.Says;
-    await new Promise((res, rej) => {
+    await new Promise((res, _) => {
       let interval: any;
       interval = setInterval(() => {
         if (this.countdown === endState) {
@@ -91,7 +96,8 @@ export class RPSController {
       }, this.countdownInterval);
     });
     await wait(this.extraCountdownDelay);
-    await Promise.all(this.outputs.map(output => output.countdown(RPSCountdownState.Shoot)));
+    this.outputs.forEach(output => output.countdown(RPSCountdownState.Shoot));
+    await wait(this.postCountdownDelay);
   }
 
   async start() {
@@ -122,6 +128,7 @@ export class RPSController {
       await Promise.all(this.outputs.map(output => output.gameStart()));
 
       while (this.state !== RPSState.Stopping) {
+        this.stoppingCurrent = false;
         this.setState(RPSState.InGame);
         await this.doCountdown();
 
@@ -129,6 +136,8 @@ export class RPSController {
         let robotMove: RPSStrategyMove = {action: RPSAction.Invalid};
         this.robotAction = robotMove.action;
         this.humanAction = null;
+        this.outputs.forEach(output => output.shootStart && output.shootStart());
+
         this.humanAction = (await Promise.all([
           Promise.race(
             this.inputs.map(input => {
@@ -145,13 +154,20 @@ export class RPSController {
               this.strategy.decideMove(this.pastTurns),
               wait(this.shootDelay)
             ]))[0];
+            this.robotAction = robotMove.action;
             await Promise.all(this.outputs.map(output => output.shoot(this.robotAction)));
           })()
         ]))[0] as RPSAction;
-        this.robotAction = robotMove.action;
         this.setState(RPSState.Ending);
+        this.outputs.forEach(output => output.shootEnd && output.shootEnd());
 
         await wait(this.shootTime);
+
+        if (this.quitAfterFirstInvalid && this.humanAction === RPSAction.Invalid) {
+          this.state = RPSState.Stopping;
+          await Promise.all(this.outputs.map(output => output.gameStop()));
+          break;
+        }
 
         let outcome = this.decideWinner(this.robotAction, this.humanAction);
         this.pastTurns.push({robot: robotMove, human: this.humanAction, outcome});
@@ -173,10 +189,16 @@ export class RPSController {
         }
 
         let tryAgain = false;
-        if (!this.turnLimit || this.pastTurns.length < this.turnLimit) {
-          this.setState(RPSState.TryAgain);
-          this.outputs.forEach(output => output.tryAgain());
-          tryAgain = await Promise.race([wait(this.playAgainTimeout), Promise.race(this.inputs.map(input => input.promise("confirmation")))]);
+        if (!this.stoppingCurrent) {
+          if (this.askToTryAgain) {
+            if (!this.turnLimit || this.pastTurns.length < this.turnLimit) {
+              this.setState(RPSState.TryAgain);
+              this.outputs.forEach(output => output.tryAgain());
+              tryAgain = await Promise.race([wait(this.playAgainTimeout), Promise.race(this.inputs.map(input => input.promise("confirmation")))]);
+            }
+          } else {
+            tryAgain = !!this.turnLimit && this.pastTurns.length < this.turnLimit;
+          }
         }
 
         if (!tryAgain) {
@@ -185,6 +207,10 @@ export class RPSController {
         }
       }
     }
+  }
+
+  stopCurrentGame() {
+    this.stoppingCurrent = true;
   }
 
   cleanup() {

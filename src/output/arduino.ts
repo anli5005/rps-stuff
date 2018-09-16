@@ -1,5 +1,4 @@
 import { RPSOutput, RPSCountdownState, RPSAction } from '../typings';
-import { RPSController } from '../rps';
 import SerialPort from 'serialport';
 import util from 'util';
 
@@ -18,11 +17,11 @@ export class ArduinoOutput implements RPSOutput {
 
   constructor(
     public port: string,
-    public baudRate: number,
-    private rps: RPSController
+    public baudRate: number
   ) {}
 
   send(command: number) {
+    console.log(`Sending ${command}`);
     let commandArray = new Int8Array(1);
     commandArray[0] = command;
     this.serial.write(Buffer.from(commandArray.buffer));
@@ -49,7 +48,6 @@ export class ArduinoOutput implements RPSOutput {
   }
 
   shoot(action: RPSAction) {
-    console.log(action);
     this.send(action);
   }
 

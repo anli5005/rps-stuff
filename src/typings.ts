@@ -69,6 +69,8 @@ export interface RPSOutput {
   gameStop(): Promise<void> | void;
 
   countdown(state: RPSCountdownState): Promise<void> | void;
+  shootStart?(): void;
+  shootEnd?(): void;
   shoot(action: RPSAction): Promise<void> | void;
 
   robotWin(robot: RPSAction, human: RPSAction, strategyData?: any): Promise<void> | void;

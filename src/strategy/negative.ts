@@ -3,12 +3,7 @@ import { wait } from '../rps';
 import { RESTInput } from '../input/rest';
 import { RandomStrategy } from './random';
 import { EventEmitter } from 'events';
-
-export interface CheatStrategyContext {
-  isCheat: true;
-  didGuess: boolean;
-  guessedAction?: RPSAction;
-}
+import { CheatStrategyContext } from './cheat';
 
 export class NegativeStrategy extends EventEmitter implements RPSStrategy {
   constructor(public server: RESTInput) {

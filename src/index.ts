@@ -19,6 +19,7 @@ import { SayOutput } from './output/say';
 import { GUIOutput } from './output/gui';
 import { ShootHTTPOutput, ShootHTTPOutputURLs } from './output/shoothttp';
 import { CheatStrategy } from './strategy/cheat';
+import { NegativeStrategy } from './strategy/negative';
 
 interface RPSInputConfig {
   cli?: boolean;
@@ -112,6 +113,7 @@ if (config.rest) {
     rest.log = config.inputs.rest.log;
     rps.addInput(rest);
     GUIInput.strategies.cheat = {shootDelay: 0, strategy: new CheatStrategy(rest)};
+    GUIInput.strategies.negative = {shootDelay: 0, strategy: new NegativeStrategy(rest)};
   }
 
   server.listen(config.rest.port);

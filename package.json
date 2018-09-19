@@ -9,7 +9,7 @@
     "start": "node dist/index.js"
   },
   "author": "anli5005",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@types/node": "^10.5.3"
   },

@@ -1,5 +1,5 @@
 {
-  "name": "rps-thing",
+  "name": "rps-stuff",
   "version": "1.0.0",
   "description": "The most overcomplicated RPS JS implementation you will ever find.",
   "main": "dist/index.js",
@@ -11,7 +11,7 @@
   "author": "anli5005",
   "repository": {
     "type": "git",
-    "url": "https://github.com/anli5005/rps-thing"
+    "url": "https://github.com/anli5005/rps-stuff"
   },
   "license": "MIT",
   "dependencies": {

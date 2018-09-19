@@ -1,6 +1,6 @@
 {
   "name": "rps-stuff",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The most overcomplicated RPS JS implementation you will ever find.",
   "main": "dist/index.js",
   "scripts": {

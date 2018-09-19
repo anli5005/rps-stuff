@@ -1,7 +1,4 @@
 import { RPSOutput, RPSCountdownState, RPSAction } from '../typings';
-import { CheatStrategyContext } from '../strategy/cheat';
-
-type StrategyData = CheatStrategyContext | any;
 
 export class CLIOutput implements RPSOutput {
   init() {
@@ -59,25 +56,13 @@ export class CLIOutput implements RPSOutput {
     }
   }
 
-  robotWin(robot: RPSAction, human: RPSAction, strategyData: StrategyData) {
-    if (strategyData && strategyData.isCheat) {
-      let data = strategyData as CheatStrategyContext;
-      console.log(data.didGuess ? `I predicted you would choose ${this.actionToString(data.guessedAction)}` : `I couldn't guess what you were about to choose.`);
-    }
+  robotWin(robot: RPSAction, human: RPSAction) {
     console.log(`I chose ${this.actionToString(robot)}. You chose ${this.actionToString(human)}. I win.`);
   }
-  humanWin(robot: RPSAction, human: RPSAction, strategyData: StrategyData) {
-    if (strategyData && strategyData.isCheat) {
-      let data = strategyData as CheatStrategyContext;
-      console.log(data.didGuess ? `I thought you would choose ${this.actionToString(data.guessedAction)}` : `I couldn't guess what you were about to choose.`);
-    }
+  humanWin(robot: RPSAction, human: RPSAction) {
     console.log(`I chose ${this.actionToString(robot)}. You chose ${this.actionToString(human)}. I lost.`);
   }
-  tie(action: RPSAction, strategyData: StrategyData) {
-    if (strategyData && strategyData.isCheat) {
-      let data = strategyData as CheatStrategyContext;
-      console.log(data.didGuess ? `I thought you would choose ${this.actionToString(data.guessedAction)}` : `I couldn't guess what you were about to choose.`);
-    }
+  tie(action: RPSAction) {
     let str = this.actionToString(action);
     console.log(`I chose ${str}. You also chose ${str}. It's a tie.`);
   }
